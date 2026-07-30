@@ -44,22 +44,6 @@ a subject for insurance actuaries.
   `nfl_data_py` Python package -- injuries, contracts, rosters, snap counts,
   seasonal performance stats, and combine data
 
-## Project Status
-
-This is a work in progress, built and documented in stages so the process is
-visible, not just the end result.
-
-| Phase | Description | Status |
-|---|---|---|
-| 1 | Scope, data sourcing, feasibility check | Done |
-| 2 | Database ingestion (`scripts/01_ingest_data.py`) | Done |
-| 2b | Injury classification into PTD/TTD (`scripts/02_classify_injuries.py`) | Done |
-| 2c | Exposure base & frequency calculation (`scripts/03_exposure.py`) | Done |
-| 3 | Risk classification / rating factor table (Excel) | Planned |
-| 4 | Severity modeling, survival analysis, pricing simulation (Python) | Planned |
-| 5 | Product design & pricing memo | Planned |
-| 6 | Dashboard (loss experience, rate table visualization) | Planned |
-
 See `LIMITATIONS.md` for known data-quality issues and modeling assumptions
 found and documented along the way.
 
