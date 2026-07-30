@@ -1,0 +1,19 @@
+# Generated data (reproducible via scripts/ -- see README)
+data/*.db
+data/*.sqlite
+data/*.csv
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+venv/
+.venv/
+
+# OS/editor cruft
+.DS_Store
+.vscode/
+.idea/
+
+# Environment/secrets, if any get added later (e.g. API keys)
+.env
