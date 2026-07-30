@@ -1,0 +1,21 @@
+# Working dependency set for this project.
+#
+# NOTE: nfl_data_py officially declares pandas<2.0 and numpy<2.0 as
+# requirements, which is outdated -- the versions below (pandas 3.x,
+# numpy 2.x) work fine in practice. When installing, pip will print a
+# dependency-conflict warning for nfl_data_py against pandas/numpy --
+# this is safe to ignore; everything has been tested end-to-end against
+# these versions (see scripts/01_ingest_data.py through 03_exposure.py).
+#
+# Install with: pip install -r requirements.txt --break-system-packages
+# (the --break-system-packages flag is only needed on some Linux setups
+# that mark the system Python as externally managed)
+
+nfl_data_py==0.3.3
+pandas>=2.0
+numpy>=2.0
+requests
+appdirs
+fastparquet
+beautifulsoup4
+lxml
