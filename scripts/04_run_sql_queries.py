@@ -15,6 +15,11 @@ from pathlib import Path
 DB_PATH = "../data/nfl_injury_project.db"
 SQL_DIR = Path("../sql")
 
+# These files contain schema/view DDL (CREATE TABLE/VIEW), not SELECT
+# queries -- they're built and executed by scripts/06_build_clean_schema.py,
+# not meant to be run here as if they returned rows.
+SKIP_FILES = {"00_schema.sql", "06_views.sql"}
+
 
 def main():
     conn = sqlite3.connect(DB_PATH)
@@ -25,6 +30,12 @@ def main():
         return
 
     for path in sql_files:
+        if path.name in SKIP_FILES:
+            print("=" * 70)
+            print(f"{path.name} (skipped -- DDL/view file, run via scripts/06_build_clean_schema.py)")
+            print("=" * 70)
+            print()
+            continue
         print("=" * 70)
         print(f"{path.name}")
         print("=" * 70)
