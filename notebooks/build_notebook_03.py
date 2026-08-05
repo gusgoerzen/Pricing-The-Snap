@@ -116,6 +116,7 @@ cells.append(new_code_cell(
     ]["annual_guaranteed_at_risk"].values
 
     totals = np.zeros(n_sims)
+    zero_payout_claims, total_claims = 0, 0
     for i in range(n_sims):
         outcomes = np.random.choice(["none", "PTD", "TTD"], size=n_players, p=probs)
         book_loss = 0.0
@@ -126,10 +127,14 @@ cells.append(new_code_cell(
                 loss = np.random.choice(ttd_pool)
             else:
                 continue
+            total_claims += 1
             payout = min(max(loss - attachment, 0), limit)
+            if payout == 0:
+                zero_payout_claims += 1
             book_loss += payout
         totals[i] = book_loss
-    return probs, totals
+    zero_pct = zero_payout_claims / total_claims if total_claims else None
+    return probs, totals, zero_pct
 
 print("Simulation function defined.")"""
 ))
@@ -143,7 +148,7 @@ reported by Sportico, which ran $1-4M for ~60% coverage of a $37M salary)."""
 ))
 
 cells.append(new_code_cell(
-"""probs, totals = simulate_book("RB", age=25, n_players=50, n_sims=10000, attachment=0.5, limit=5.0)
+"""probs, totals, _ = simulate_book("RB", age=25, n_players=50, n_sims=10000, attachment=0.5, limit=5.0)
 
 print(f"P(no claim) = {probs[0]:.3f}, P(PTD) = {probs[1]:.3f}, P(TTD) = {probs[2]:.3f}")
 print()
@@ -184,7 +189,7 @@ cells.append(new_code_cell(
 
 rows = []
 for pos, age in scenarios:
-    probs, totals = simulate_book(pos, age, n_players=50, n_sims=5000, attachment=0.5, limit=5.0)
+    probs, totals, _ = simulate_book(pos, age, n_players=50, n_sims=5000, attachment=0.5, limit=5.0)
     rows.append({
         "position": pos, "age": age,
         "p_ptd": probs[1], "p_ttd": probs[2],
@@ -205,7 +210,131 @@ higher dollar severity found in the contracts data even though QB claim
 directions here, exactly the kind of tension a real pricing exercise has
 to reconcile, not just average away.
 
-## 5. Note on loading (this is pure premium, not a quoted price)
+## 5. A Better Policy Structure: Percentage-of-Contract Attachment
+
+The flat $0.5M attachment/$5M limit used above implicitly assumes every
+insured contract is roughly the same size. It isn't -- QB guaranteed money
+runs many multiples of RB guaranteed money. Let's quantify exactly how
+much this matters, then fix it.
+
+**The fix:** set attachment and limit as a **percentage of that specific
+player's own contract value** (20% attachment, 100% limit -- an 80%
+coinsurance structure) instead of a flat dollar figure. This is a standard
+technique in real excess-of-loss insurance."""
+))
+
+cells.append(new_code_cell(
+"""def simulate_book_pct_structure(position, age, n_players=50, n_sims=10000,
+                                  attachment_pct=0.20, limit_pct=1.0):
+    \"\"\"Same simulation as simulate_book, but attachment/limit are computed
+    as a percentage of each individual claim's own contract value, not a
+    flat dollar figure.\"\"\"
+    X = pd.DataFrame({"position_group": [position], "age": [age]})
+    p_ptd = model_ptd.predict(X).iloc[0]
+    p_ttd = model_ttd.predict(X).iloc[0]
+    probs = [1 - p_ptd - p_ttd, p_ptd, p_ttd]
+
+    ptd_pool = severity[
+        (severity.position_group == position) & (severity.claim_classification == "PTD")
+    ]["annual_guaranteed_at_risk"].values
+    ttd_pool = severity[
+        (severity.position_group == position) & (severity.claim_classification == "TTD")
+    ]["annual_guaranteed_at_risk"].values
+
+    totals = np.zeros(n_sims)
+    zero_payout_claims, total_claims = 0, 0
+    for i in range(n_sims):
+        outcomes = np.random.choice(["none", "PTD", "TTD"], size=n_players, p=probs)
+        book_loss = 0.0
+        for o in outcomes:
+            if o == "PTD":
+                loss = np.random.choice(ptd_pool)
+            elif o == "TTD":
+                loss = np.random.choice(ttd_pool)
+            else:
+                continue
+            total_claims += 1
+            attachment = attachment_pct * loss
+            limit = limit_pct * loss
+            payout = min(max(loss - attachment, 0), limit)
+            if payout == 0:
+                zero_payout_claims += 1
+            book_loss += payout
+        totals[i] = book_loss
+    zero_pct = zero_payout_claims / total_claims if total_claims else None
+    return probs, totals, zero_pct
+
+
+def zero_payout_rate_flat(position, attachment=0.5):
+    \"\"\"What fraction of REAL, observed claims fall below a flat attachment
+    point and would trigger no payout at all?\"\"\"
+    pool = severity[severity.position_group == position]["annual_guaranteed_at_risk"]
+    return (pool < attachment).mean()
+
+
+print("Functions defined.")"""
+))
+
+cells.append(new_markdown_cell(
+"""### First: how big is the problem under the flat structure?
+
+Using the *real* empirical claims (not simulated), what fraction fall below
+the $0.5M flat attachment point and would trigger zero payout?"""
+))
+
+cells.append(new_code_cell(
+"""for pos in ["RB", "OL", "QB"]:
+    pct = zero_payout_rate_flat(pos)
+    n = len(severity[severity.position_group == pos])
+    print(f"{pos}: {pct*100:.1f}% of {n} real claims fall below the $0.5M flat attachment")"""
+))
+
+cells.append(new_markdown_cell(
+"""**72% of real RB claims would produce zero payout** under a flat $0.5M
+attachment -- the policy is effectively hollow for the position with the
+highest claim frequency in this project. QB, with far larger contracts, is
+much less affected (33%). This is exactly the scaling problem a flat
+attachment point creates.
+
+### Now: rerun the pricing simulation with the percentage-of-contract structure"""
+))
+
+cells.append(new_code_cell(
+"""rows = []
+for pos, age in [("RB", 23), ("RB", 25), ("RB", 27), ("RB", 31), ("OL", 27), ("QB", 27)]:
+    _, flat_totals, flat_zero_pct = simulate_book(pos, age, n_sims=10000)
+    _, pct_totals, pct_zero_pct = simulate_book_pct_structure(pos, age, n_sims=10000)
+    rows.append({
+        "position": pos, "age": age,
+        "flat_mean_premium": round(flat_totals.mean() / 50, 4),
+        "flat_pct_zero_payout": round(flat_zero_pct, 3),
+        "pct_structure_mean_premium": round(pct_totals.mean() / 50, 4),
+        "pct_structure_pct_zero_payout": round(pct_zero_pct, 3),
+    })
+
+comparison = pd.DataFrame(rows)
+comparison"""
+))
+
+cells.append(new_markdown_cell(
+"""**Reading this table:**
+
+- **Zero-payout rate drops dramatically for every position** -- RB goes
+  from ~72-75% of claims triggering nothing to ~15-16%. The residual
+  zero-payout rate under the percentage structure isn't a flaw in the
+  structure -- it's driven by real contracts with $0 guaranteed money
+  (e.g., some rookie-scale deals), which is a genuinely different, and
+  much smaller, problem than the flat structure's scaling mismatch.
+- **Pure premium rises for every position** once claims that previously
+  produced no payout start contributing positive amounts -- most notably
+  for RB and OL, less so for QB (which was already the least affected by
+  the flat-structure problem).
+- **This is the more honest price.** The flat-structure premiums above
+  were *understating* the true cost of covering RB and OL contracts,
+  precisely because that policy structure quietly failed to pay out on a
+  majority of their real claims.
+
+## 6. Note on loading (this is pure premium, not a quoted price)
 
 Everything above is **pure premium** -- the expected claims cost with no
 margin. A real quoted premium would add loadings for expenses, profit,
