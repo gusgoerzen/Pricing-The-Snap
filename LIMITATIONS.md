@@ -107,3 +107,20 @@ with 4-5 rating factors), with QB/TTD (36 claims) coming in slightly under
 that bar. This is disclosed as a partial-credibility result, consistent with
 how real actuarial work treats thin segments -- not glossed over as if the
 volume were fully sufficient.
+
+## Pricing memo: flat vs. percentage-of-contract attachment structure
+
+A flat dollar attachment point ($0.5M), tested in
+`notebooks/03_pricing_simulation.ipynb`, was found to produce zero payout
+on 71.9% of real RB claims and 55.3% of real OL claims, because the
+attachment was implicitly sized for QB-scale contracts. A percentage-of-
+contract structure (attachment/limit as a % of the player's own contract
+value, rather than a flat number) fixes this -- but because severity in
+this model *is* the player's annualized guaranteed money itself (not an
+independently observed fraction of it), a percentage-based attachment
+mechanically produces a payout on nearly every claim by construction
+(except true $0-guaranteed contracts). The fix is structurally correct for
+the scaling problem it addresses, but the specific 20%/100% split used was
+chosen for illustration, not calibrated to a target loss ratio -- a real
+pricing exercise would tune that split against actual target economics,
+not assume a round number.
