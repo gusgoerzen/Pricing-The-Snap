@@ -1,3 +1,4 @@
+
 # Pricing Memo: Hypothetical NFL Disability Insurance Product
 
 **Prepared as part of the Pricing the Snap portfolio project. Not an actual
@@ -143,9 +144,48 @@ the policy structure priced here ($0.5M attachment, $5M limit):
   exactly the kind of segmentation insight a pricing exercise is supposed
   to surface.
 
+## 6. Fix: Percentage-of-Contract Attachment Structure
+
+Section 5's worked example is quantified directly in
+`notebooks/03_pricing_simulation.ipynb`, Section 5: using the real,
+observed claims (not simulated), **71.9% of RB claims, 55.3% of OL claims,
+and 32.6% of QB claims fall below the flat $0.5M attachment point** and
+would trigger zero payout. The policy is most hollow for the position
+with the highest claim frequency in this project (RB) -- precisely
+backwards from what a useful product should do.
+
+**The fix:** set attachment (20%) and limit (100%) as a percentage of
+each player's *own* contract value, rather than a flat dollar figure --
+the same technique real excess-of-loss insurance uses to scale coverage
+to the size of what's actually being insured.
+
+| Position | Age | Flat-Structure Premium | Flat % Zero-Payout | %-Structure Premium | %-Structure % Zero-Payout |
+|---|---|---|---|---|---|
+| RB | 23 | $0.045M | 72.0% | $0.057M | 15.2% |
+| RB | 25 | $0.045M | 72.8% | $0.057M | 15.4% |
+| RB | 27 | $0.044M | 73.7% | $0.058M | 15.8% |
+| RB | 31 | $0.046M | 75.1% | $0.061M | 16.4% |
+| OL | 27 | $0.062M | 56.8% | $0.072M | 17.3% |
+| QB | 27 | $0.153M | 33.0% | $0.202M | 10.6% |
+
+**Zero-payout rates drop dramatically** for every position under the
+percentage structure -- RB from ~72-75% down to ~15-16%. The *residual*
+zero-payout rate isn't a structural flaw anymore; it's driven by real
+contracts with $0 guaranteed money (some rookie-scale deals), a much
+smaller and more defensible problem than the original scaling mismatch.
+
+**Pure premium rises for every position** once previously-uncompensated
+claims start contributing positive payouts -- most for RB and OL, least
+for QB (which was already the least affected by the flat-structure
+problem, since QB contracts were usually large enough to clear $0.5M
+regardless). **This is the more honest price**: the flat-structure
+premiums in Section 3 were understating the true cost of covering RB and
+OL contracts specifically because that structure quietly failed to pay
+out on a majority of their real claims.
+
 ---
 
-## 6. Assumptions & Limitations (See `LIMITATIONS.md` for Full Detail)
+## 7. Assumptions & Limitations (See `LIMITATIONS.md` for Full Detail)
 
 - Pure premium only -- no expense, profit, or risk margin loading applied.
 - Severity is bootstrap-sampled from a modest number of real claims per
@@ -163,10 +203,18 @@ the policy structure priced here ($0.5M attachment, $5M limit):
   shown in Section 5 to be a real limitation of this specific exercise, not
   a general critique of TTD/PTD insurance -- real policies are individually
   underwritten per player and contract.
+- The percentage-of-contract fix in Section 6 has its own simplification:
+  because the model's severity draw *is* the player's annualized guaranteed
+  money (not a separately observed fraction of it), a percentage-based
+  attachment mechanically guarantees a payout on almost every claim by
+  construction (except true $0-guaranteed contracts) -- this is a
+  structurally correct fix for the scaling problem, but the *specific*
+  20%/100% split was chosen for illustration, not fitted to real target
+  loss ratios.
 
 ---
 
-## 7. Disclaimer
+## 8. Disclaimer
 
 This is a personal portfolio/learning project. It does not represent an
 actual insurance product, is not a regulatory filing, and should not be
