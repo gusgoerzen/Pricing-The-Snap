@@ -1,0 +1,7 @@
+position_group,claim_classification,n_claims,matched_n,contract_match_rate,avg_annual_guaranteed_at_risk_millions
+OL,TTD,190,179,0.942,1.764
+OL,PTD,213,179,0.84,0.894
+QB,TTD,36,33,0.917,5.818
+QB,PTD,82,62,0.756,2.648
+RB,TTD,151,113,0.748,0.906
+RB,PTD,199,129,0.648,0.341

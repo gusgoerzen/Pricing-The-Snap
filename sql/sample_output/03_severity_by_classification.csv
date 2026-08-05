@@ -1,0 +1,10 @@
+position_group,claim_classification,n,avg_games_missed,min_games_missed,max_games_missed
+OL,excluded_sub_threshold,346,3.28,2,5
+OL,TTD,190,9.38,6,16
+OL,PTD,213,11.13,6,17
+QB,excluded_sub_threshold,74,3.39,2,5
+QB,TTD,36,9.5,6,15
+QB,PTD,84,10.49,6,16
+RB,excluded_sub_threshold,291,3.42,2,5
+RB,TTD,154,8.87,6,15
+RB,PTD,205,11.34,6,16
