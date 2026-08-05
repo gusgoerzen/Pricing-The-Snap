@@ -50,15 +50,15 @@ found and documented along the way.
 ## Repository Structure
 
 ```
-├── scripts/          # Python ingestion & data-processing pipeline
-├── sql/              # SQL: schema DDL, views, analysis queries, sample outputs
-│   └── sample_output/ # CSV exports of each query's results, for browsing on GitHub
-├── excel/             # Rating factor workbook (pivot-style summary, rate lookup tool)
-├── notebooks/        # Modeling: frequency/severity, survival analysis, pricing simulation
-├── dashboard/         # Power BI / Tableau loss-experience dashboard
-├── writeup/           # Product spec + pricing memo
-├── data/              # SQLite database (generated locally -- see below, not committed)
-├── LIMITATIONS.md      # Data-quality issues & methodology caveats found during the build
+├── scripts/ # Python ingestion & data-processing pipeline
+├── sql/ # SQL: schema DDL, views, analysis queries, sample outputs
+│ └── sample_output/ # CSV exports of each query's results, for browsing on GitHub
+├── excel/ # Rating factor workbook (pivot-style summary, rate lookup tool)
+├── notebooks/ # Modeling: frequency/severity, survival analysis, pricing simulation
+├── dashboard/ # Power BI / Tableau loss-experience dashboard
+├── writeup/ # Product spec + pricing memo
+├── data/ # SQLite database (generated locally -- see below, not committed)
+├── LIMITATIONS.md # Data-quality issues & methodology caveats found during the build
 └── README.md
 ```
 
